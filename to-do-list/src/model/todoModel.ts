@@ -1,4 +1,4 @@
 export default interface TodoModel {
-    id:Date,
+    id:string,
     todo:string
 }

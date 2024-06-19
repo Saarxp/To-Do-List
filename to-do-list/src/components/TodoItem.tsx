@@ -1,16 +1,16 @@
 import { FaPencilAlt, FaTrash } from "react-icons/fa"
 import TodoModel from "../model/todoModel"
 
-interface TaskProps {
+interface TodoItemProps {
     todo:TodoModel,
     index:number
     setEdit: (index: number) => void;
-    removeTodo: (id: Date) => void;
+    removeTodo: (id: string) => void;
 }
 
-function Task({todo, index, setEdit, removeTodo}:TaskProps) {
+function TodoItem({todo, index, setEdit, removeTodo}:TodoItemProps) {
   return (
-    <li key={index} className="flex items-center justify-between bg-white p-3 rounded shadow-md mb-3">
+    <li className="flex items-center justify-between bg-white p-3 rounded shadow-md mb-3">
       <span className="text-lg">{todo.todo}</span>
       <div>
         <button onClick={() => setEdit(index)}
@@ -26,4 +26,4 @@ function Task({todo, index, setEdit, removeTodo}:TaskProps) {
   )
 }
 
-export default Task
+export default TodoItem

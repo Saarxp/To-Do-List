@@ -1,13 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 import { FaPencilAlt, FaPlus } from "react-icons/fa";
 import TodoModel from "./model/todoModel";
-import Task from "./components/Task";
+import { addDoc, collection, deleteDoc, doc, onSnapshot, updateDoc } from "firebase/firestore";
+import { db } from "./firebase";
+import TodoList from "./components/TodoList";
 
 function App() {
   const [todos, setTodos] = useState<TodoModel[]>([]);
   const [input, setInput] = useState("");
   const [editIndex, setEditIndex] = useState(-1);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'todos'), (snapshot) => {
+      setTodos(snapshot.docs.map((doc) => ({ id: doc.id, todo: doc.data().todo})));
+    })
+
+    return () => unsubscribe();
+  }, []);
 
   const setEdit = (index: number) => {
     setInput(todos[index].todo);
@@ -17,7 +27,7 @@ function App() {
   const addTodo = async () => {
     try {
       if (input.trim() !== "") {
-        setTodos([...todos, { id: new Date(), todo: input }]);
+        await addDoc(collection(db,'todos'), {todo: input});
         setInput("");
       }
     } catch (error) {
@@ -28,9 +38,8 @@ function App() {
   const updateTodo = async () => {
     try {
       if (input.trim() !== "") {
-        const updatedTodos = [...todos];
-        updatedTodos[editIndex].todo = input;
-        setTodos(updatedTodos);
+        const todoDocRef = doc(db,'todos', todos[editIndex].id);
+        await updateDoc(todoDocRef, {todo: input});
         setEditIndex(-1);
         setInput("");
       }
@@ -39,12 +48,14 @@ function App() {
     }
   };
 
-  const removeTodo = async (id: Date) => {
+  const removeTodo = async (id: string) => {
+  try{
     if (editIndex === -1) {
-      let filteredTodos = todos.filter((todo) => todo.id !== id);
-      return setTodos(filteredTodos);
+      await deleteDoc(doc(db, 'todos', id));
     }
-    return;
+  }catch(error) {
+    console.error(error)
+  }
   };
 
   return (
@@ -69,20 +80,9 @@ function App() {
           </div>
         </div>
 
-        {todos.length > 0 && (
-          <div className="bg-gray-100 p-6 rounded shadow-md w-full max-w-lg lg:w-1/4">
-            <ul>
-              {todos.map((todo, index) => (
-                <Task
-                  todo={todo}
-                  index={index}
-                  setEdit={setEdit}
-                  removeTodo={removeTodo}
-                />
-              ))}
-            </ul>
-          </div>
-        )}
+        {
+        todos.length > 0 && <TodoList todos={todos} setEdit={setEdit} removeTodo={removeTodo}/>
+        }
       </div>
     </>
   );
